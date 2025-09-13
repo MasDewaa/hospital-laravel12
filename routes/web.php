@@ -61,6 +61,9 @@ Route::prefix('chat')->group(function () {
     Route::get('/history', [App\Http\Controllers\ChatController::class, 'getHistory'])->name('chat.history');
     Route::post('/send', [App\Http\Controllers\ChatController::class, 'sendMessage'])->name('chat.send');
     Route::get('/stats', [App\Http\Controllers\ChatController::class, 'getStats'])->name('chat.stats');
+    Route::get('/test-gemini', [App\Http\Controllers\ChatController::class, 'testGemini'])->name('chat.test-gemini');
+    Route::get('/faq', [App\Http\Controllers\ChatController::class, 'getFAQ'])->name('chat.faq');
+    Route::get('/similar-questions', [App\Http\Controllers\ChatController::class, 'getSimilarQuestions'])->name('chat.similar-questions');
 });
 
 // Fallback untuk 404

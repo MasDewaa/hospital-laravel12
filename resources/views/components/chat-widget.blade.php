@@ -47,6 +47,7 @@
                 <button class="suggestion-btn" data-message="Apa saja layanan yang tersedia?">Layanan</button>
                 <button class="suggestion-btn" data-message="Bagaimana cara membuat janji temu?">Janji Temu</button>
                 <button class="suggestion-btn" data-message="Informasi kontak rumah sakit">Kontak</button>
+                <button class="suggestion-btn" id="faqBtn">FAQ</button>
             </div>
         </div>
     </div>
@@ -365,195 +366,78 @@
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', () => {
     const chatToggle = document.getElementById('chatToggle');
     const chatWindow = document.getElementById('chatWindow');
-    const chatMinimize = document.getElementById('chatMinimize');
     const chatInput = document.getElementById('chatInput');
     const chatSend = document.getElementById('chatSend');
     const chatMessages = document.getElementById('chatMessages');
-    const chatBadge = document.getElementById('chatBadge');
-    const suggestionBtns = document.querySelectorAll('.suggestion-btn');
 
-    let sessionId = generateSessionId();
-    let isTyping = false;
-
-    // Generate unique session ID
-    function generateSessionId() {
-        return 'chat_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    }
+    let sessionId = null;
 
     // Toggle chat window
-    chatToggle.addEventListener('click', function() {
-        if (chatWindow.style.display === 'none') {
-            chatWindow.style.display = 'flex';
-            chatInput.focus();
-            chatBadge.style.display = 'none';
-        } else {
-            chatWindow.style.display = 'none';
-        }
-    });
-
-    // Minimize chat window
-    chatMinimize.addEventListener('click', function() {
-        chatWindow.style.display = 'none';
+    chatToggle.addEventListener('click', () => {
+        chatWindow.style.display = chatWindow.style.display === 'none' ? 'flex' : 'none';
+        chatInput.focus();
     });
 
     // Send message
-    function sendMessage(message) {
+    async function sendMessage(message) {
         if (!message.trim()) return;
 
-        // Add user message to chat
         addMessage(message, 'user');
-        
-        // Clear input
         chatInput.value = '';
-        
-        // Show typing indicator
-        showTypingIndicator();
 
-        // Send to server
-        fetch('/chat/send', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({
-                message: message,
-                session_id: sessionId
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            hideTypingIndicator();
+        try {
+            const response = await fetch('/chat/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ message, session_id: sessionId })
+            });
+
+            const data = await response.json();
+
             if (data.success) {
+                sessionId = data.session_id;
                 addMessage(data.ai_response.message, 'ai');
             } else {
-                addMessage('Maaf, terjadi kesalahan. Silakan coba lagi.', 'ai');
+                addMessage('Maaf, saya mengalami gangguan teknis.', 'ai');
             }
-        })
-        .catch(error => {
-            hideTypingIndicator();
-            addMessage('Maaf, terjadi kesalahan. Silakan coba lagi.', 'ai');
+        } catch (error) {
             console.error('Error:', error);
-        });
+            addMessage('Maaf, saya mengalami gangguan teknis.', 'ai');
+        }
     }
 
     // Add message to chat
     function addMessage(message, sender) {
         const messageDiv = document.createElement('div');
         messageDiv.className = `chat-message ${sender}-message`;
-        
-        const avatar = document.createElement('div');
-        avatar.className = 'message-avatar';
-        avatar.innerHTML = sender === 'user' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-robot"></i>';
-        
+
         const content = document.createElement('div');
         content.className = 'message-content';
-        
-        const text = document.createElement('div');
-        text.className = 'message-text';
-        text.textContent = message;
-        
-        const time = document.createElement('div');
-        time.className = 'message-time';
-        time.textContent = new Date().toLocaleTimeString('id-ID', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-        });
-        
-        content.appendChild(text);
-        content.appendChild(time);
-        messageDiv.appendChild(avatar);
+        content.textContent = message;
+
         messageDiv.appendChild(content);
-        
         chatMessages.appendChild(messageDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    // Show typing indicator
-    function showTypingIndicator() {
-        isTyping = true;
-        const typingDiv = document.createElement('div');
-        typingDiv.className = 'chat-message ai-message';
-        typingDiv.id = 'typingIndicator';
-        
-        const avatar = document.createElement('div');
-        avatar.className = 'message-avatar';
-        avatar.innerHTML = '<i class="fas fa-robot"></i>';
-        
-        const indicator = document.createElement('div');
-        indicator.className = 'typing-indicator';
-        indicator.innerHTML = `
-            <div class="typing-dot"></div>
-            <div class="typing-dot"></div>
-            <div class="typing-dot"></div>
-        `;
-        
-        typingDiv.appendChild(avatar);
-        typingDiv.appendChild(indicator);
-        chatMessages.appendChild(typingDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-
-    // Hide typing indicator
-    function hideTypingIndicator() {
-        isTyping = false;
-        const indicator = document.getElementById('typingIndicator');
-        if (indicator) {
-            indicator.remove();
-        }
-    }
-
     // Send button click
-    chatSend.addEventListener('click', function() {
+    chatSend.addEventListener('click', () => {
         const message = chatInput.value.trim();
-        if (message) {
-            sendMessage(message);
-        }
+        if (message) sendMessage(message);
     });
 
     // Enter key press
-    chatInput.addEventListener('keypress', function(e) {
+    chatInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             const message = chatInput.value.trim();
-            if (message) {
-                sendMessage(message);
-            }
-        }
-    });
-
-    // Suggestion buttons
-    suggestionBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const message = this.getAttribute('data-message');
-            sendMessage(message);
-        });
-    });
-
-    // Load chat history
-    function loadChatHistory() {
-        fetch(`/chat/history?session_id=${sessionId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.data.length > 0) {
-                chatMessages.innerHTML = '';
-                data.data.forEach(chat => {
-                    addMessage(chat.message, chat.sender);
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Error loading chat history:', error);
-        });
-    }
-
-    // Load history when chat opens
-    chatToggle.addEventListener('click', function() {
-        if (chatWindow.style.display === 'flex') {
-            loadChatHistory();
+            if (message) sendMessage(message);
         }
     });
 });

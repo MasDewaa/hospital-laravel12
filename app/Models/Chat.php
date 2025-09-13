@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Chat extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'session_id',
         'user_id',
@@ -22,7 +24,7 @@ class Chat extends Model
     /**
      * Get the user that owns the chat message.
      */
-    public function user(): BelongsTo
+    public function user()
     {
         return $this->belongsTo(User::class);
     }
