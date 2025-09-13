@@ -1,0 +1,44 @@
+name: Sync on DOM Cloud
+'on':
+  workflow_dispatch: {}
+  push:
+    branches:
+      - main
+      - master
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Invoke deployment hook
+        uses: distributhor/workflow-webhook@v3
+        env:
+          webhook_url: https://my.domcloud.co/api/githubdeploy
+          webhook_secret: ${{ secrets.WEBHOOK_SECRET }}
+          webhook_auth: ${{ secrets.WEBHOOK_AUTH }}
+          data: >-
+            {"features":[{"create":{"domain":"hospitaldewa.domcloud.dev","user":"hospitaldewa","pass":"<redacted>","email":"ramasyailana3@gmail.com"}},"postgresql","php
+            latest","ssl","ssl
+            always"],"source":"https://github.com/MasDewaa/hospital-laravel12","nginx":{"root":"public_html/public","fastcgi":"on","locations":[{"match":"/","try_files":"$uri
+            $uri/ /index.php$is_args$args"},{"match":"~
+            \\.[^\\/]+(?<!\\.php)$","try_files":"$uri =404"}]},"commands":["(cp
+            .env.example .env) || curl -sSLo .env
+            https://raw.githubusercontent.com/laravel/laravel/refs/heads/12.x/.env.example","sed
+            -ri \"s/APP_URL=.*/APP_URL=https:\\/\\/${DOMAIN}/g\" .env","sed -ri
+            \"s/(# )?DB_CONNECTION=.*/DB_CONNECTION=pgsql/g\" .env","sed -ri
+            \"s/(# )?DB_HOST=.*/DB_HOST=localhost/g\" .env","sed -ri \"s/(#
+            )?DB_PORT=.*/DB_PORT=5432/g\" .env","sed -ri \"s/(#
+            )?DB_DATABASE=.*/DB_DATABASE=${DATABASE}/g\" .env","sed -ri \"s/(#
+            )?DB_USERNAME=.*/DB_USERNAME=${USERNAME}/g\" .env","sed -ri \"s/(#
+            )?DB_PASSWORD=.*/DB_PASSWORD=${PGPASSWD}/g\" .env","sed -ri
+            \"s/LOG_STACK=single/LOG_STACK=daily,errorlog/g\" .env","sed -ri
+            \"s/(# )?APP_DEBUG=.*/APP_DEBUG=false/g\" .env","composer
+            install","php artisan migrate:fresh --seed || true","php artisan
+            key:generate","php artisan storage:link","npm install","npm run
+            build","chmod 0750 -R storage || true","rm -f public/hot"],"wait":1}
+          verbose: true
+      - name: Check deployment status
+        uses: distributhor/workflow-webhook@v3
+        env:
+          webhook_url: https://my.domcloud.co/api/githubdeploycheck
+          webhook_secret: ${{ secrets.WEBHOOK_SECRET }}
+          webhook_auth: ${{ secrets.WEBHOOK_AUTH }}
