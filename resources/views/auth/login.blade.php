@@ -50,7 +50,7 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('login') }}">
+                    <form method="POST" action="{{ route('staff.login') }}">
                         @csrf
                         
                         <div class="mb-3">
@@ -87,11 +87,11 @@
                         </button>
                     </form>
 
-                    <div class="text-center">
+                    <div class="text-center mt-3">
                         <small class="text-muted">
-                            Demo Credentials:<br>
-                            Admin: admin@hospital.com / password<br>
-                            Doctor: john.smith@hospital.com / password
+                            <a href="{{ route('patient.login') }}" class="text-decoration-none">
+                                <i class="fas fa-user-md me-1"></i>Patient Login
+                            </a>
                         </small>
                     </div>
                 </div>

@@ -104,7 +104,7 @@
 
                     <div class="text-center mt-3">
                         <small class="text-muted">
-                            <a href="{{ route('login') }}" class="text-decoration-none">
+                            <a href="{{ route('staff.login') }}" class="text-decoration-none">
                                 <i class="fas fa-user-md me-1"></i>Staff/Doctor Login
                             </a>
                         </small>

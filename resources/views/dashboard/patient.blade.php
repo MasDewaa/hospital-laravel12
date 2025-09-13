@@ -175,4 +175,7 @@
     color: #4e73df !important;
 }
 </style>
+
+<!-- Chat Widget -->
+@include('components.chat-widget')
 @endsection

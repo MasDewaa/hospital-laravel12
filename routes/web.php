@@ -12,9 +12,12 @@ use Illuminate\Support\Facades\Route;
 // Welcome page
 Route::get('/', fn() => view('welcome'))->name('welcome');
 
+// Portal page (moved from welcome)
+Route::get('/login', fn() => view('auth.portal'))->name('login');
+
 // Staff/Doctor Auth
-Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [LoginController::class, 'login']);
+Route::get('/staff-login', [LoginController::class, 'showLoginForm'])->name('staff.login');
+Route::post('/staff-login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // Patient Auth
@@ -51,6 +54,13 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware('role:patient')->group(function () {
         Route::get('/patient-dashboard', [PatientDashboardController::class, 'index'])->name('patient.dashboard');
     });
+});
+
+// Chat routes
+Route::prefix('chat')->group(function () {
+    Route::get('/history', [App\Http\Controllers\ChatController::class, 'getHistory'])->name('chat.history');
+    Route::post('/send', [App\Http\Controllers\ChatController::class, 'sendMessage'])->name('chat.send');
+    Route::get('/stats', [App\Http\Controllers\ChatController::class, 'getStats'])->name('chat.stats');
 });
 
 // Fallback untuk 404
