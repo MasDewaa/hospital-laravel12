@@ -68,12 +68,10 @@
                                                    class="btn btn-sm btn-outline-warning">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                <form method="POST" action="{{ route('patients.destroy', $patient) }}" 
-                                                      class="d-inline" 
-                                                      onsubmit="return confirm('Are you sure you want to delete this patient?')">
+                                                <form method="POST" action="{{ route('patients.destroy', $patient) }}" class="d-inline delete-form">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    <button type="button" class="btn btn-sm btn-outline-danger btn-delete" data-message="Apakah Anda yakin ingin menghapus pasien ini?">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
                                                 </form>

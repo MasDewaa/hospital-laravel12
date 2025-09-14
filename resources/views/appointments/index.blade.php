@@ -92,12 +92,10 @@
                                                    class="btn btn-sm btn-outline-warning">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                <form method="POST" action="{{ route('appointments.destroy', $appointment) }}" 
-                                                      class="d-inline" 
-                                                      onsubmit="return confirm('Are you sure you want to cancel this appointment?')">
+                                                <form method="POST" action="{{ route('appointments.destroy', $appointment) }}" class="d-inline delete-form">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    <button type="button" class="btn btn-sm btn-outline-danger btn-delete" data-message="Apakah Anda yakin ingin membatalkan appointment ini?">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
                                                 </form>

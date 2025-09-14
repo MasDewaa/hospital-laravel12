@@ -156,9 +156,25 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
+    @include('components.confirm-modal')
+    
     <!-- Chat Widget -->
     @include('components.chat-widget')
     
     @yield('scripts')
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.btn-delete').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const form = btn.closest('form');
+                const msg = btn.getAttribute('data-message') || 'Apakah Anda yakin ingin menghapus data ini?';
+                window.confirmModal(msg, function() {
+                    form.submit();
+                });
+            });
+        });
+    });
+    </script>
 </body>
 </html>
