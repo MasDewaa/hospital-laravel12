@@ -91,4 +91,44 @@ class User extends Authenticatable
             'email' => $this->email,
         ];
     }
+
+    /**
+     * Get the doctor record associated with the user.
+     */
+    public function doctor()
+    {
+        return $this->hasOne(Doctor::class);
+    }
+
+    /**
+     * Get the patient record associated with the user.
+     */
+    public function patient()
+    {
+        return $this->hasOne(Patient::class);
+    }
+
+    /**
+     * Get the chat messages for the user.
+     */
+    public function chats()
+    {
+        return $this->hasMany(Chat::class);
+    }
+
+    /**
+     * Get the appointments for the user (if they are a patient).
+     */
+    public function appointments()
+    {
+        return $this->hasManyThrough(Appointment::class, Patient::class);
+    }
+
+    /**
+     * Get the doctor's appointments (if they are a doctor).
+     */
+    public function doctorAppointments()
+    {
+        return $this->hasManyThrough(Appointment::class, Doctor::class);
+    }
 }

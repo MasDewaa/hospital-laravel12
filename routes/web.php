@@ -43,6 +43,8 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('patients', PatientController::class);
         Route::resource('doctors', DoctorController::class);
         Route::resource('appointments', AppointmentController::class);
+        // Explicitly add edit route for appointments
+        Route::get('appointments/{appointment}/edit', [AppointmentController::class, 'edit'])->name('appointments.edit');
     });
 
     // Doctor

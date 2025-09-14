@@ -13,7 +13,7 @@
             min-height: 100vh;
         }
         .hero-section {
-            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600"><rect fill="%23f8f9fa" width="1200" height="600"/><path fill="%23e9ecef" d="M0,300 Q300,200 600,300 T1200,300 L1200,600 L0,600 Z"/></svg>');
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.3)), url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600"><rect fill="%23f8f9fa" width="1200" height="600"/><path fill="%23e9ecef" d="M0,300 Q300,200 600,300 T1200,300 L1200,600 L0,600 Z"/></svg>');
             background-size: cover;
             background-position: center;
             min-height: 100vh;
@@ -53,7 +53,7 @@
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" style="background: rgba(102, 126, 234, 0.95); backdrop-filter: blur(10px);">
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" style="background: rgb(111, 99, 194); backdrop-filter: blur(60px);">
         <div class="container">
             <a class="navbar-brand" href="#">
                 <i class="fas fa-hospital me-2"></i>
@@ -65,16 +65,16 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="#about">Tentang Kami</a>
+                        <a class="nav-link text-white" href="#about">Tentang Kami</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#services">Layanan</a>
+                        <a class="nav-link text-white" href="#services">Layanan</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#contact">Kontak</a>
+                        <a class="nav-link text-white" href="#contact">Kontak</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link btn btn-light text-primary ms-2 px-3" href="{{ route('login') }}">
+                        <a class="nav-link btn btn-light bg-white text-primary ms-2 px-3 " href="{{ route('login') }}">
                             <i class="fas fa-sign-in-alt me-1"></i>Login
                         </a>
                     </li>
@@ -270,18 +270,13 @@
     </section>
 
     <!-- Footer -->
-    <footer class="py-4" style="background: #2c3e50;">
+    <footer class="py-4" style="background: #6e56b0;">
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-md-6">
                     <p class="text-white mb-0">
                         &copy; 2024 Rumah Sakit Sehat Sentosa. All rights reserved.
                     </p>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <a href="{{ route('login') }}" class="btn btn-primary">
-                        <i class="fas fa-sign-in-alt me-2"></i>Login ke Sistem
-                    </a>
                 </div>
             </div>
         </div>
