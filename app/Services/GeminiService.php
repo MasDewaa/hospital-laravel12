@@ -14,9 +14,9 @@ class GeminiService
 
     public function __construct()
     {
-        $this->model = Config::get('gemini.model', 'gemini-1.5-flash');
+        $this->model = Config::get('gemini.model');
         $this->apiKey = Config::get('gemini.api_key');
-        $this->baseUrl = Config::get('gemini.base_url', 'https://generativelanguage.googleapis.com/v1beta');
+        $this->baseUrl = Config::get('gemini.base_url');
     }
 
     /**
