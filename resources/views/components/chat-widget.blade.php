@@ -239,6 +239,7 @@
 .message-text {
     line-height: 1.4;
     word-wrap: break-word;
+    white-space: pre-wrap;
 }
 
 .message-time {
@@ -367,78 +368,193 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const chatToggle = document.getElementById('chatToggle');
-    const chatWindow = document.getElementById('chatWindow');
-    const chatInput = document.getElementById('chatInput');
-    const chatSend = document.getElementById('chatSend');
-    const chatMessages = document.getElementById('chatMessages');
+	const chatToggle = document.getElementById('chatToggle');
+	const chatWindow = document.getElementById('chatWindow');
+	const chatMinimize = document.getElementById('chatMinimize');
+	const chatBadge = document.getElementById('chatBadge');
+	const chatInput = document.getElementById('chatInput');
+	const chatSend = document.getElementById('chatSend');
+	const chatMessages = document.getElementById('chatMessages');
+	const suggestionButtons = document.querySelectorAll('.suggestion-btn');
+	const faqBtn = document.getElementById('faqBtn');
 
-    let sessionId = null;
+	const chatSendUrl = "{{ route('chat.send') }}";
+	const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
 
-    // Toggle chat window
-    chatToggle.addEventListener('click', () => {
-        chatWindow.style.display = chatWindow.style.display === 'none' ? 'flex' : 'none';
-        chatInput.focus();
-    });
+	let sessionId = localStorage.getItem('chat_session_id') || null;
+	let unreadCount = 0;
+	let isSending = false;
+	let typingEl = null;
 
-    // Send message
-    async function sendMessage(message) {
-        if (!message.trim()) return;
+	function formatTime(date) {
+		return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+	}
 
-        addMessage(message, 'user');
-        chatInput.value = '';
+	function toggleChat(open) {
+		const shouldOpen = typeof open === 'boolean' ? open : chatWindow.style.display === 'none';
+		chatWindow.style.display = shouldOpen ? 'flex' : 'none';
+		if (shouldOpen) {
+			unreadCount = 0;
+			updateBadge();
+			chatInput.focus();
+			chatMessages.scrollTop = chatMessages.scrollHeight;
+		}
+	}
 
-        try {
-            const response = await fetch('/chat/send', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({ message, session_id: sessionId })
-            });
+	function updateBadge() {
+		if (unreadCount > 0) {
+			chatBadge.textContent = String(unreadCount);
+			chatBadge.style.display = 'flex';
+		} else {
+			chatBadge.style.display = 'none';
+		}
+	}
 
-            const data = await response.json();
+	function showTyping() {
+		if (typingEl) return;
+		typingEl = document.createElement('div');
+		typingEl.className = 'chat-message ai-message';
+		const avatar = document.createElement('div');
+		avatar.className = 'message-avatar';
+		avatar.innerHTML = '<i class="fas fa-robot"></i>';
+		const content = document.createElement('div');
+		content.className = 'message-content';
+		const indicator = document.createElement('div');
+		indicator.className = 'typing-indicator';
+		indicator.innerHTML = '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
+		content.appendChild(indicator);
+		typingEl.appendChild(avatar);
+		typingEl.appendChild(content);
+		chatMessages.appendChild(typingEl);
+		chatMessages.scrollTop = chatMessages.scrollHeight;
+	}
 
-            if (data.success) {
-                sessionId = data.session_id;
-                addMessage(data.ai_response.message, 'ai');
-            } else {
-                addMessage('Maaf, saya mengalami gangguan teknis.', 'ai');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            addMessage('Maaf, saya mengalami gangguan teknis.', 'ai');
-        }
-    }
+	function hideTyping() {
+		if (typingEl && typingEl.parentNode) {
+			typingEl.parentNode.removeChild(typingEl);
+		}
+		typingEl = null;
+	}
 
-    // Add message to chat
-    function addMessage(message, sender) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `chat-message ${sender}-message`;
+	function addMessage(message, sender) {
+		const messageWrapper = document.createElement('div');
+		messageWrapper.className = `chat-message ${sender}-message`;
 
-        const content = document.createElement('div');
-        content.className = 'message-content';
-        content.textContent = message;
+		const avatar = document.createElement('div');
+		avatar.className = 'message-avatar';
+		avatar.innerHTML = sender === 'ai' ? '<i class="fas fa-robot"></i>' : '<i class="fas fa-user"></i>';
 
-        messageDiv.appendChild(content);
-        chatMessages.appendChild(messageDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
+		const content = document.createElement('div');
+		content.className = 'message-content';
 
-    // Send button click
-    chatSend.addEventListener('click', () => {
-        const message = chatInput.value.trim();
-        if (message) sendMessage(message);
-    });
+		const text = document.createElement('div');
+		text.className = 'message-text';
+		text.textContent = message;
 
-    // Enter key press
-    chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            const message = chatInput.value.trim();
-            if (message) sendMessage(message);
-        }
-    });
+		const time = document.createElement('div');
+		time.className = 'message-time';
+		time.textContent = formatTime(new Date());
+
+		content.appendChild(text);
+		content.appendChild(time);
+
+		if (sender === 'user') {
+			messageWrapper.appendChild(avatar);
+			messageWrapper.appendChild(content);
+		} else {
+			messageWrapper.appendChild(avatar);
+			messageWrapper.appendChild(content);
+		}
+
+		chatMessages.appendChild(messageWrapper);
+		chatMessages.scrollTop = chatMessages.scrollHeight;
+
+		if (sender === 'ai' && chatWindow.style.display === 'none') {
+			unreadCount += 1;
+			updateBadge();
+		}
+	}
+
+	async function sendMessage(message) {
+		if (!message || !message.trim() || isSending) return;
+
+		addMessage(message, 'user');
+		chatInput.value = '';
+		isSending = true;
+		chatInput.disabled = true;
+		chatSend.disabled = true;
+		showTyping();
+
+		try {
+			const headers = {
+				'Content-Type': 'application/json',
+				'Accept': 'application/json',
+				'X-Requested-With': 'XMLHttpRequest'
+			};
+			if (csrfTokenMeta) {
+				headers['X-CSRF-TOKEN'] = csrfTokenMeta.getAttribute('content');
+			}
+
+			const response = await fetch(chatSendUrl, {
+				method: 'POST',
+				headers,
+				body: JSON.stringify({ message, session_id: sessionId })
+			});
+
+			if (!response.ok) throw new Error(`HTTP ${response.status}`);
+			const data = await response.json();
+
+			if (data && data.success && data.ai_response && data.ai_response.message) {
+				sessionId = data.session_id || sessionId;
+				if (sessionId) localStorage.setItem('chat_session_id', sessionId);
+				addMessage(data.ai_response.message, 'ai');
+			} else {
+				addMessage('Maaf, saya mengalami gangguan teknis.', 'ai');
+			}
+		} catch (error) {
+			console.error('Chat send error:', error);
+			addMessage('Maaf, saya mengalami gangguan teknis.', 'ai');
+		} finally {
+			hideTyping();
+			isSending = false;
+			chatInput.disabled = false;
+			chatSend.disabled = false;
+			chatInput.focus();
+		}
+	}
+
+	// Toggle chat window
+	chatToggle.addEventListener('click', () => toggleChat());
+	chatMinimize.addEventListener('click', () => toggleChat(false));
+
+	// Send button click
+	chatSend.addEventListener('click', () => {
+		const message = chatInput.value.trim();
+		if (message) sendMessage(message);
+	});
+
+	// Enter key press
+	chatInput.addEventListener('keydown', (e) => {
+		if (e.key === 'Enter' && !e.shiftKey) {
+			e.preventDefault();
+			const message = chatInput.value.trim();
+			if (message) sendMessage(message);
+		}
+	});
+
+	// Suggestions
+	suggestionButtons.forEach(btn => {
+		btn.addEventListener('click', () => {
+			const quick = btn.getAttribute('data-message');
+			toggleChat(true);
+			if (quick) sendMessage(quick);
+		});
+	});
+	if (faqBtn && !faqBtn.getAttribute('data-message')) {
+		faqBtn.addEventListener('click', () => {
+			toggleChat(true);
+			sendMessage('FAQ');
+		});
+	}
 });
 </script>
