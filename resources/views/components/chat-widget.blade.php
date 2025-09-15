@@ -459,38 +459,49 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 	async function sendMessage(message) {
 		if (!message || !message.trim() || isSending) return;
+		
 		addMessage(message, 'user');
 		chatInput.value = '';
 		isSending = true;
 		chatInput.disabled = true;
 		chatSend.disabled = true;
 		showTyping();
+
 		try {
 			const headers = {
 				'Content-Type': 'application/json',
 				'Accept': 'application/json',
-				'X-Requested-With': 'XMLHttpRequest'
+				'X-Requested-With': 'XMLHttpRequest',
+				'X-CSRF-TOKEN': csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : ''
 			};
-			if (csrfTokenMeta) {
-				headers['X-CSRF-TOKEN'] = csrfTokenMeta.getAttribute('content');
-			}
+
+			console.log('Sending message:', message); // Debug log
+
 			const response = await fetch(chatSendUrl, {
 				method: 'POST',
 				headers,
-				body: JSON.stringify({ message, session_id: sessionId })
+				body: JSON.stringify({ 
+					message, 
+					session_id: sessionId,
+					context_type: 'general' // Add context type
+				})
 			});
-			if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+			console.log('Response status:', response.status); // Debug log
+
 			const data = await response.json();
-			if (data && data.success && data.ai_response && data.ai_response.message) {
+			console.log('Response data:', data); // Debug log
+
+			if (data.success && data.ai_response) {
 				sessionId = data.session_id || sessionId;
 				if (sessionId) localStorage.setItem('chat_session_id', sessionId);
 				addMessage(data.ai_response.message, 'ai');
 			} else {
-				addMessage('Maaf, saya mengalami gangguan teknis.', 'ai');
+				throw new Error(data.error || 'Invalid response format');
 			}
 		} catch (error) {
-			console.error('Chat send error:', error);
-			addMessage('Maaf, saya mengalami gangguan teknis.', 'ai');
+			console.error('Chat error details:', error); // Detailed error logging
+			addMessage('Maaf, terjadi kesalahan. Silakan coba lagi dalam beberapa saat.', 'ai');
 		} finally {
 			hideTyping();
 			isSending = false;
